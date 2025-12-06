@@ -42,6 +42,12 @@ async function run() {
     // Connections
     const database = client.db(process.env.DB_NAME);
     const usersCollection = database.collection("users");
+
+    // GET All Users
+    app.get("/users", async (req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
