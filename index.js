@@ -55,6 +55,19 @@ async function run() {
       const result = await usersCollection.findOne({ email });
       res.send(result);
     });
+
+    // CREATE New User
+    app.post("/users", async (req, res) => {
+      const newUser = req.body;
+      const exists = await usersCollection.findOne({ email: newUser.email });
+
+      if (exists) {
+        return res.status(409).send({ message: "User already exists" });
+      }
+
+      const result = await usersCollection.insertOne(newUser);
+      res.send(result);
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
