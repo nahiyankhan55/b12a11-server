@@ -48,6 +48,13 @@ async function run() {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
+
+    // GET Single User by Email
+    app.get("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await usersCollection.findOne({ email });
+      res.send(result);
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
