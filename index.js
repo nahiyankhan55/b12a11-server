@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { MongoClient, ServerApiVersion } from "mongodb";
+import { MongoClient, ObjectId, ServerApiVersion } from "mongodb";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
@@ -115,7 +115,6 @@ async function run() {
       const result = await scholarshipsCollection.find().toArray();
       res.send(result);
     });
-
     // GET admin scholarships
     app.get("/scholarships/:admin", verifyToken, async (req, res) => {
       const adminEmail = req.params.admin;
@@ -125,12 +124,36 @@ async function run() {
         .toArray();
       res.send(result);
     });
-
     // POST scholarships
     app.post("/scholarships", async (req, res) => {
       const data = req.body;
       const result = await scholarshipsCollection.insertOne(data);
       res.send(result);
+    });
+    // DELETE scholarships
+    app.delete("/scholarships/delete/:id", verifyToken, async (req, res) => {
+      try {
+        const id = req.params.id;
+
+        // Optional: verify that the user deleting this scholarship is the owner/admin
+        const scholarship = await scholarshipsCollection.findOne({
+          _id: new ObjectId(id),
+        });
+        if (!scholarship)
+          return res.status(404).send({ message: "Scholarship not found" });
+
+        const result = await scholarshipsCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        if (result.deletedCount > 0) {
+          res.send({ success: true, deletedCount: result.deletedCount });
+        } else {
+          res.status(400).send({ success: false, message: "Delete failed" });
+        }
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ success: false, message: "Server error" });
+      }
     });
   } finally {
     // Ensures that the client will close when you finish/error
