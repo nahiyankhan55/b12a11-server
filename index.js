@@ -17,6 +17,18 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+const verifyToken = (req, res, next) => {
+  const token = req.cookies?.token;
+  if (!token) {
+    return res.status(401).send({ message: "Unauthorized" });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(403).send({ message: "Forbidden" });
+    req.decoded = decoded;
+    next();
+  });
+};
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_ACCESS}@cluster0.bfqzn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -42,6 +54,37 @@ async function run() {
     // Connections
     const database = client.db(process.env.DB_NAME);
     const usersCollection = database.collection("users");
+    const scholarshipsCollection = database.collection("scholarships");
+    const appsCollection = database.collection("applications");
+    const reviewsCollection = database.collection("reviews");
+
+    // jwt
+    // CREATE JWT
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+
+      const token = jwt.sign(user, process.env.JWT_SECRET, {
+        expiresIn: "7d",
+      });
+
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+        })
+        .send({ success: true });
+    });
+    // Delete JWT
+    app.post("/logout", async (req, res) => {
+      res
+        .clearCookie("token", {
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+        })
+        .send({ success: true });
+    });
 
     // GET All Users
     app.get("/users", async (req, res) => {
