@@ -91,14 +91,12 @@ async function run() {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
-
     // GET Single User by Email
     app.get("/users/:email", async (req, res) => {
       const email = req.params.email;
       const result = await usersCollection.findOne({ email });
       res.send(result);
     });
-
     // CREATE New User
     app.post("/users", async (req, res) => {
       const newUser = req.body;
@@ -109,6 +107,13 @@ async function run() {
       }
 
       const result = await usersCollection.insertOne(newUser);
+      res.send(result);
+    });
+
+    // POST scholarships
+    app.post("/scholarships", async (req, res) => {
+      const data = req.body;
+      const result = await scholarshipsCollection.insertOne(data);
       res.send(result);
     });
   } finally {
