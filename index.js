@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { MongoClient, ServerApiVersion } from "mongodb";
 import cookieParser from "cookie-parser";
+import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -62,16 +63,15 @@ async function run() {
     // CREATE JWT
     app.post("/jwt", async (req, res) => {
       const user = req.body;
-
-      const token = jwt.sign(user, process.env.JWT_SECRET, {
-        expiresIn: "7d",
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1h",
       });
-
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: true,
-          sameSite: "none",
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "None",
+          maxAge: 60 * 60 * 1000,
         })
         .send({ success: true });
     });
@@ -107,6 +107,12 @@ async function run() {
       }
 
       const result = await usersCollection.insertOne(newUser);
+      res.send(result);
+    });
+
+    // GET all scholarships
+    app.get("/scholarships", async (req, res) => {
+      const result = await scholarshipsCollection.find().toArray();
       res.send(result);
     });
 
