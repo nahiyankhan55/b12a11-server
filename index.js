@@ -24,7 +24,7 @@ const verifyToken = (req, res, next) => {
     return res.status(401).send({ message: "Unauthorized" });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
     if (err) return res.status(403).send({ message: "Forbidden" });
     req.decoded = decoded;
     next();
@@ -113,6 +113,16 @@ async function run() {
     // GET all scholarships
     app.get("/scholarships", async (req, res) => {
       const result = await scholarshipsCollection.find().toArray();
+      res.send(result);
+    });
+
+    // GET admin scholarships
+    app.get("/scholarships/:admin", verifyToken, async (req, res) => {
+      const adminEmail = req.params.admin;
+
+      const result = await scholarshipsCollection
+        .find({ postedUserEmail: adminEmail })
+        .toArray();
       res.send(result);
     });
 
