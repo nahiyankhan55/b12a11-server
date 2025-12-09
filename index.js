@@ -109,6 +109,33 @@ async function run() {
       const result = await usersCollection.insertOne(newUser);
       res.send(result);
     });
+    // Update user role
+    app.put("/users/:userId/role", async (req, res) => {
+      try {
+        const { userId } = req.params;
+        const { role } = req.body;
+
+        // Validate role
+        const validRoles = ["Student", "Moderator"];
+        if (!validRoles.includes(role)) {
+          return res.status(400).send({ message: "Invalid role value" });
+        }
+
+        const result = await usersCollection.updateOne(
+          { _id: new ObjectId(userId) },
+          { $set: { role } }
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).send({ message: "User not found" });
+        }
+
+        res.send({ success: true, message: "Role updated successfully" });
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
 
     // GET all scholarships
     app.get("/scholarships", async (req, res) => {
