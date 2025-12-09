@@ -155,6 +155,24 @@ async function run() {
         res.status(500).send({ success: false, message: "Server error" });
       }
     });
+
+    // GET admin scholarship data
+    app.get("/scholarship/data/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const result = await scholarshipsCollection.findOne({
+          _id: new ObjectId(id),
+        });
+
+        if (!result) {
+          return res.status(404).send({ message: "No scholarship found" });
+        }
+
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: "Server error" });
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
