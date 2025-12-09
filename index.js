@@ -160,7 +160,25 @@ async function run() {
 
     // GET all scholarships
     app.get("/scholarships", async (req, res) => {
-      const result = await scholarshipsCollection.find().toArray();
+      const { search, category } = req.query;
+
+      let query = {};
+
+      // search filter (name, university)
+      if (search) {
+        query.$or = [
+          { scholarshipName: { $regex: search, $options: "i" } },
+          { universityName: { $regex: search, $options: "i" } },
+          { universityCountry: { $regex: search, $options: "i" } },
+        ];
+      }
+
+      // category filter
+      if (category) {
+        query.scholarshipCategory = category;
+      }
+
+      const result = await scholarshipsCollection.find(query).toArray();
       res.send(result);
     });
     // GET admin scholarships
