@@ -259,6 +259,25 @@ async function run() {
         res.status(500).send({ message: "Server error" });
       }
     });
+
+    // GET reviews filtered by scholarshipId
+    app.get("/reviews", async (req, res) => {
+      try {
+        const scholarshipId = req.query.scholarshipId;
+
+        let query = {};
+
+        if (scholarshipId) {
+          query.scholarshipId = scholarshipId;
+        }
+
+        const result = await reviewsCollection.find(query).toArray();
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
