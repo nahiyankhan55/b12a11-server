@@ -173,6 +173,26 @@ async function run() {
         res.status(500).send({ message: "Server error" });
       }
     });
+    // UPDATE admin scholarship data
+    app.put("/scholarship/update/:id", verifyToken, async (req, res) => {
+      try {
+        const id = req.params.id;
+        const data = req.body;
+
+        const result = await scholarshipsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: data }
+        );
+
+        if (result.modifiedCount === 0) {
+          return res.status(400).send({ message: "No changes made" });
+        }
+
+        res.send({ success: true, message: "Updated successfully" });
+      } catch (error) {
+        res.status(500).send({ message: "Server error" });
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
