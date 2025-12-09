@@ -136,6 +136,27 @@ async function run() {
         res.status(500).send({ message: "Server error" });
       }
     });
+    // Assign moderator
+    app.put("/users/assign/:email", async (req, res) => {
+      try {
+        const { email } = req.params;
+        const { moderatorFor } = req.body;
+
+        const result = await usersCollection.updateOne(
+          { email },
+          { $set: { moderatorFor } }
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).send({ message: "User not found" });
+        }
+
+        res.send({ success: true, message: "Moderator assigned successfully" });
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
 
     // GET all scholarships
     app.get("/scholarships", async (req, res) => {
