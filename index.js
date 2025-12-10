@@ -61,6 +61,7 @@ async function run() {
     const scholarshipsCollection = database.collection("scholarships");
     const appsCollection = database.collection("applications");
     const reviewsCollection = database.collection("reviews");
+    const paymentsCollection = database.collection("payments");
 
     // jwt
     // CREATE JWT
@@ -100,6 +101,36 @@ async function run() {
       });
 
       res.send({ clientSecret: paymentIntent.client_secret });
+    });
+    // Save Payment Info
+    app.post("/payments", async (req, res) => {
+      try {
+        const { scholarshipId, amount, transactionId, email } = req.body;
+
+        if (!scholarshipId || !amount || !transactionId || !email) {
+          return res.status(400).send({ message: "Missing payment fields" });
+        }
+
+        const paymentData = {
+          scholarshipId,
+          amount,
+          transactionId,
+          email,
+          paidAt: new Date(),
+          status: "completed",
+        };
+
+        const result = await paymentsCollection.insertOne(paymentData);
+
+        res.send({
+          success: true,
+          message: "Payment saved successfully",
+          insertedId: result.insertedId,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error while saving payment" });
+      }
     });
 
     // GET All Users
