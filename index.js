@@ -4,6 +4,7 @@ import { MongoClient, ObjectId, ServerApiVersion } from "mongodb";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import Stripe from "stripe";
 dotenv.config();
 
 const port = process.env.PORT || 3030;
@@ -30,6 +31,8 @@ const verifyToken = (req, res, next) => {
     next();
   });
 };
+
+const stripe = new Stripe(process.env.STRIPE_SK);
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_ACCESS}@cluster0.bfqzn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -84,6 +87,19 @@ async function run() {
           sameSite: "none",
         })
         .send({ success: true });
+    });
+
+    // payment
+    app.post("/create-payment-intent", async (req, res) => {
+      const { amount, scholarshipId } = req.body;
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount * 100, // convert to cents
+        currency: "usd",
+        metadata: { scholarshipId },
+      });
+
+      res.send({ clientSecret: paymentIntent.client_secret });
     });
 
     // GET All Users
