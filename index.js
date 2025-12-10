@@ -325,6 +325,58 @@ async function run() {
         res.status(500).send({ message: "Server error" });
       }
     });
+
+    // CREATE Application
+    app.post("/applications", async (req, res) => {
+      try {
+        const {
+          scholar,
+          scholarshipId,
+          scholarshipName,
+          universityName,
+          fees,
+          applicant,
+          appliedDate,
+          status,
+        } = req.body;
+
+        // Validation
+        if (
+          !scholar ||
+          !scholarshipId ||
+          !scholarshipName ||
+          !universityName ||
+          !fees ||
+          !applicant
+        ) {
+          return res.status(400).send({ message: "Missing fields" });
+        }
+
+        const newApplication = {
+          scholar,
+          scholarshipId,
+          scholarshipName,
+          universityName,
+          fees,
+          applicant,
+          appliedDate: appliedDate || new Date(),
+          status: status || "pending",
+        };
+
+        const result = await appsCollection.insertOne(newApplication);
+
+        res.send({
+          success: true,
+          message: "Application submitted successfully",
+          insertedId: result.insertedId,
+        });
+      } catch (error) {
+        console.error(error);
+        res
+          .status(500)
+          .send({ message: "Server error while saving application" });
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
