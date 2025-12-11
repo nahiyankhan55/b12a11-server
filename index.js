@@ -228,6 +228,11 @@ async function run() {
       const result = await scholarshipsCollection.find(query).toArray();
       res.send(result);
     });
+    // GET all scholarships
+    app.get("/home/scholarships", async (req, res) => {
+      const result = await scholarshipsCollection.find({}).limit(6).toArray();
+      res.send(result);
+    });
     // GET admin scholarships
     app.get("/scholarships/:admin", verifyToken, async (req, res) => {
       const adminEmail = req.params.admin;
