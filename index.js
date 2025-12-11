@@ -338,6 +338,7 @@ async function run() {
           applicant,
           appliedDate,
           status,
+          payment,
         } = req.body;
 
         // Validation
@@ -361,6 +362,7 @@ async function run() {
           applicant,
           appliedDate: appliedDate || new Date(),
           status: status || "pending",
+          payment: payment,
         };
 
         const result = await appsCollection.insertOne(newApplication);
@@ -375,6 +377,24 @@ async function run() {
         res
           .status(500)
           .send({ message: "Server error while saving application" });
+      }
+    });
+    // GET: user's all applications
+    app.get("/applications/user", async (req, res) => {
+      try {
+        const email = req.query.email;
+        if (!email) {
+          return res.status(400).send({ message: "Email query required" });
+        }
+
+        const result = await appsCollection
+          .find({ applicant: email })
+          .toArray();
+
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error loading applications" });
       }
     });
   } finally {
