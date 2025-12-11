@@ -397,6 +397,30 @@ async function run() {
         res.status(500).send({ message: "Server error loading applications" });
       }
     });
+    app.delete("/applications/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+
+        const appDoc = await appsCollection.findOne({ _id: new ObjectId(id) });
+
+        if (!appDoc)
+          return res.status(404).send({ message: "Application not found" });
+
+        if (appDoc.applicationStatus !== "pending") {
+          return res
+            .status(403)
+            .send({ message: "Only pending applications can be deleted" });
+        }
+
+        const result = await appsCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+
+        res.send({ success: true, deleted: result.deletedCount });
+      } catch (error) {
+        res.status(500).send({ message: "Server error deleting application" });
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
