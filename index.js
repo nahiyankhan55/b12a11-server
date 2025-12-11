@@ -13,7 +13,10 @@ const app = express();
 // middleware
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: [
+      "http://localhost:5173",
+      "https://scholarstream-b12a11-nahiyan.netlify.app",
+    ],
     credentials: true,
   })
 );
@@ -48,12 +51,12 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
 
     // Connections
     const database = client.db(process.env.DB_NAME);
@@ -228,7 +231,7 @@ async function run() {
       const result = await scholarshipsCollection.find(query).toArray();
       res.send(result);
     });
-    // GET all scholarships
+    // GET home scholarships
     app.get("/home/scholarships", async (req, res) => {
       const result = await scholarshipsCollection.find({}).limit(6).toArray();
       res.send(result);
@@ -424,6 +427,28 @@ async function run() {
         res.send({ success: true, deleted: result.deletedCount });
       } catch (error) {
         res.status(500).send({ message: "Server error deleting application" });
+      }
+    });
+
+    // GET: statistics
+    app.get("/home/stats", async (req, res) => {
+      try {
+        const usersCount = await usersCollection.countDocuments();
+        const appsCount = await appsCollection.countDocuments();
+        const scholarshipsCount = await scholarshipsCollection.countDocuments();
+
+        res.send({
+          users: usersCount,
+          applications: appsCount,
+          scholarships: scholarshipsCount,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({
+          users: 0,
+          applications: 0,
+          scholarships: 0,
+        });
       }
     });
   } finally {
