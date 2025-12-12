@@ -672,6 +672,28 @@ async function run() {
         res.status(500).send({ message: "Server error updating review" });
       }
     });
+
+    // GET Single Application by ID
+    app.get("/applications/details/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ message: "Invalid application ID" });
+        }
+
+        const result = await appsCollection.findOne({ _id: new ObjectId(id) });
+
+        if (!result) {
+          return res.status(404).send({ message: "Application not found" });
+        }
+
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error loading application" });
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
