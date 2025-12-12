@@ -519,7 +519,6 @@ async function run() {
         res.status(500).send({ message: "Server error updating status" });
       }
     });
-
     // UPDATE application feedback
     app.put("/applications/:id/feedback", async (req, res) => {
       try {
@@ -539,6 +538,20 @@ async function run() {
       } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Server error saving feedback" });
+      }
+    });
+    // DELETE / reject application
+    app.delete("/applications/delete/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        const result = await appsCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        res.send({ success: true, deleted: result.deletedCount, status: 200 });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error deleting application" });
       }
     });
   } finally {
