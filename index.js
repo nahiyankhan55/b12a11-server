@@ -723,6 +723,38 @@ async function run() {
         res.status(500).send({ message: "Server error updating application" });
       }
     });
+
+    // GET dashboard stats
+    app.get("/analytics/stats", async (req, res) => {
+      try {
+        const usersCount = await usersCollection.countDocuments();
+        const scholarshipsCount = await scholarshipsCollection.countDocuments();
+        const paymentsData = await paymentsCollection.find().toArray();
+        const totalFees = paymentsData.reduce((sum, p) => sum + p.amount, 0);
+
+        // Count applications per university
+        const apps = await appsCollection.find().toArray();
+        const appCountPerUniversity = apps.reduce((acc, curr) => {
+          acc[curr.universityName] = (acc[curr.universityName] || 0) + 1;
+          return acc;
+        }, {});
+
+        res.send({
+          usersCount,
+          scholarshipsCount,
+          totalFees,
+          appCountPerUniversity,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({
+          usersCount: 0,
+          scholarshipsCount: 0,
+          totalFees: 0,
+          appCountPerUniversity: {},
+        });
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
