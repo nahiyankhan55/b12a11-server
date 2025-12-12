@@ -694,6 +694,35 @@ async function run() {
         res.status(500).send({ message: "Server error loading application" });
       }
     });
+    // UPDATE Application (Full Update)
+    app.put("/applications/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ message: "Invalid application ID" });
+        }
+
+        const updateData = req.body;
+
+        const result = await appsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updateData }
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).send({ message: "Application not found" });
+        }
+
+        res.send({
+          success: true,
+          message: "Application updated successfully",
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error updating application" });
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
