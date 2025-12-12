@@ -207,6 +207,29 @@ async function run() {
         res.status(500).send({ message: "Server error" });
       }
     });
+    // DELETE user
+    app.delete("/users/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ message: "Invalid user ID" });
+        }
+
+        const result = await usersCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+
+        if (result.deletedCount === 0) {
+          return res.status(404).send({ message: "User not found" });
+        }
+
+        res.send({ success: true, deleted: result.deletedCount });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error deleting user" });
+      }
+    });
 
     // GET all scholarships
     app.get("/scholarships", async (req, res) => {
