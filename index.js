@@ -488,6 +488,37 @@ async function run() {
         res.status(500).send({ message: "Server error fetching applications" });
       }
     });
+
+    // UPDATE application status
+    app.put("/applications/:id/status", async (req, res) => {
+      try {
+        const { id } = req.params;
+        const { status } = req.body;
+        const validStatuses = [
+          "pending",
+          "processing",
+          "completed",
+          "rejected",
+        ];
+        if (!validStatuses.includes(status)) {
+          return res.status(400).send({ message: "Invalid status value" });
+        }
+
+        const result = await appsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { status } }
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).send({ message: "Application not found" });
+        }
+
+        res.send({ success: true, message: "Status updated successfully" });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error updating status" });
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
