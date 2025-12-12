@@ -519,6 +519,28 @@ async function run() {
         res.status(500).send({ message: "Server error updating status" });
       }
     });
+
+    // UPDATE application feedback
+    app.put("/applications/:id/feedback", async (req, res) => {
+      try {
+        const { id } = req.params;
+        const { feedback } = req.body;
+
+        const result = await appsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { feedback } }
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).send({ message: "Application not found" });
+        }
+
+        res.send({ success: true, message: "Feedback saved successfully" });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error saving feedback" });
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
