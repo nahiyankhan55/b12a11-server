@@ -554,6 +554,56 @@ async function run() {
         res.status(500).send({ message: "Server error deleting application" });
       }
     });
+
+    // POST Reviews
+    app.post("/reviews", async (req, res) => {
+      try {
+        const {
+          scholarshipId,
+          universityName,
+          userName,
+          userEmail,
+          userImage,
+          ratingPoint,
+          reviewComment,
+          reviewDate,
+        } = req.body;
+
+        if (
+          !scholarshipId ||
+          !userName ||
+          !userEmail ||
+          !ratingPoint ||
+          !reviewComment
+        ) {
+          return res
+            .status(400)
+            .send({ message: "Missing required review fields" });
+        }
+
+        const newReview = {
+          scholarshipId,
+          universityName,
+          userName,
+          userEmail,
+          userImage,
+          ratingPoint: Number(ratingPoint),
+          reviewComment,
+          reviewDate: reviewDate || new Date(),
+        };
+
+        const result = await reviewsCollection.insertOne(newReview);
+
+        res.send({
+          success: true,
+          message: "Review added successfully",
+          insertedId: result.insertedId,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error while saving review" });
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
