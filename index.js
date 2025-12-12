@@ -342,6 +342,7 @@ async function run() {
     app.get("/reviews", async (req, res) => {
       try {
         const scholarshipId = req.query.scholarshipId;
+        const email = req.query.email;
 
         let query = {};
 
@@ -349,11 +350,32 @@ async function run() {
           query.scholarshipId = scholarshipId;
         }
 
+        if (email) {
+          query.userEmail = email;
+        }
+
         const result = await reviewsCollection.find(query).toArray();
         res.send(result);
       } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Server error" });
+      }
+    });
+    // Delete Review
+    app.delete("/reviews/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+        const result = await reviewsCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+
+        if (result.deletedCount === 0) {
+          return res.status(404).send({ message: "Review not found" });
+        }
+
+        res.send({ success: true });
+      } catch (error) {
+        res.status(500).send({ message: "Server error deleting review" });
       }
     });
 
@@ -561,8 +583,10 @@ async function run() {
         const {
           scholarshipId,
           universityName,
+          scholarshipName,
           userName,
           userEmail,
+          postByEmail,
           userImage,
           ratingPoint,
           reviewComment,
@@ -574,7 +598,8 @@ async function run() {
           !userName ||
           !userEmail ||
           !ratingPoint ||
-          !reviewComment
+          !reviewComment ||
+          !postByEmail
         ) {
           return res
             .status(400)
@@ -584,8 +609,10 @@ async function run() {
         const newReview = {
           scholarshipId,
           universityName,
+          scholarshipName,
           userName,
           userEmail,
+          postByEmail,
           userImage,
           ratingPoint: Number(ratingPoint),
           reviewComment,
