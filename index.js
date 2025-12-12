@@ -343,6 +343,7 @@ async function run() {
       try {
         const scholarshipId = req.query.scholarshipId;
         const email = req.query.email;
+        const modMail = req.query.modMail;
 
         let query = {};
 
@@ -352,6 +353,10 @@ async function run() {
 
         if (email) {
           query.userEmail = email;
+        }
+
+        if (modMail) {
+          query.postByEmail = modMail;
         }
 
         const result = await reviewsCollection.find(query).toArray();
@@ -629,6 +634,42 @@ async function run() {
       } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Server error while saving review" });
+      }
+    });
+    // UPDATE Review
+    app.put("/reviews/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+        const { reviewComment, ratingPoint } = req.body;
+
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ message: "Invalid review ID" });
+        }
+
+        const updateDoc = {
+          $set: {
+            reviewComment,
+            ratingPoint: Number(ratingPoint),
+            reviewDate: new Date(), // update timestamp
+          },
+        };
+
+        const result = await reviewsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          updateDoc
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).send({ message: "Review not found" });
+        }
+
+        res.send({
+          success: true,
+          message: "Review updated successfully",
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error updating review" });
       }
     });
   } finally {
