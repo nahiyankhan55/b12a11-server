@@ -474,6 +474,20 @@ async function run() {
         });
       }
     });
+
+    // GET all applications (Moderator)
+    app.get("/applications/:email", async (req, res) => {
+      const { email } = req.params;
+      try {
+        const apps = await appsCollection
+          .find({ "scholar.postedUserEmail": email })
+          .toArray(); // optionally filter by moderator's assigned universities
+        res.send(apps);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error fetching applications" });
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
