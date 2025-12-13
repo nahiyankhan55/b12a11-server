@@ -77,7 +77,7 @@ async function run() {
         .cookie("token", token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
-          sameSite: "None",
+          sameSite: "none",
           maxAge: 60 * 60 * 1000,
         })
         .send({ success: true });
@@ -92,6 +92,43 @@ async function run() {
         })
         .send({ success: true });
     });
+
+    // admin or moderator middleware
+    const verifyAdmin = async (req, res, next) => {
+      try {
+        const email = req.decoded?.email;
+        if (!email) {
+          return res.status(401).send({ message: "Unauthorized" });
+        }
+
+        const user = await usersCollection.findOne({ email });
+        if (!user || user.role !== "Admin") {
+          return res.status(403).send({ message: "Forbidden: Admin only" });
+        }
+
+        next();
+      } catch (error) {
+        res.status(500).send({ message: "Server error" });
+      }
+    };
+
+    const verifyModerator = async (req, res, next) => {
+      try {
+        const email = req.decoded?.email;
+        if (!email) {
+          return res.status(401).send({ message: "Unauthorized" });
+        }
+
+        const user = await usersCollection.findOne({ email });
+        if (!user || (user.role !== "Moderator" && user.role !== "Admin")) {
+          return res.status(403).send({ message: "Forbidden: Moderator only" });
+        }
+
+        next();
+      } catch (error) {
+        res.status(500).send({ message: "Server error" });
+      }
+    };
 
     // payment
     app.post("/create-payment-intent", async (req, res) => {
@@ -260,7 +297,7 @@ async function run() {
       res.send(result);
     });
     // GET admin scholarships
-    app.get("/scholarships/:admin", verifyToken, async (req, res) => {
+    app.get("/scholarships/:admin", async (req, res) => {
       const adminEmail = req.params.admin;
 
       const result = await scholarshipsCollection
@@ -275,7 +312,7 @@ async function run() {
       res.send(result);
     });
     // DELETE scholarships
-    app.delete("/scholarships/delete/:id", verifyToken, async (req, res) => {
+    app.delete("/scholarships/delete/:id", async (req, res) => {
       try {
         const id = req.params.id;
 
@@ -318,7 +355,7 @@ async function run() {
       }
     });
     // UPDATE admin scholarship data
-    app.put("/scholarship/update/:id", verifyToken, async (req, res) => {
+    app.put("/scholarship/update/:id", async (req, res) => {
       try {
         const id = req.params.id;
         const data = req.body;
@@ -394,6 +431,7 @@ async function run() {
           universityName,
           fees,
           applicant,
+          userName,
           appliedDate,
           status,
           payment,
@@ -406,7 +444,8 @@ async function run() {
           !scholarshipName ||
           !universityName ||
           !fees ||
-          !applicant
+          !applicant ||
+          !userName
         ) {
           return res.status(400).send({ message: "Missing fields" });
         }
@@ -418,6 +457,7 @@ async function run() {
           universityName,
           fees,
           applicant,
+          userName,
           appliedDate: appliedDate || new Date(),
           status: status || "pending",
           payment: payment,
