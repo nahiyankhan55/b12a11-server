@@ -13,10 +13,7 @@ const app = express();
 // middleware
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://scholarstream-b12a11-nahiyan.netlify.app",
-    ],
+    origin: ["https://scholarstream-b12a11-nahiyan.netlify.app"],
     credentials: true,
   })
 );
