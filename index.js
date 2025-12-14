@@ -265,29 +265,49 @@ async function run() {
       }
     });
 
-    // GET all scholarships
+    // GET all scholarships (with search, filter, sort)
+
     app.get("/scholarships", async (req, res) => {
-      const { search, category } = req.query;
+      try {
+        const { search, category, sortBy, order } = req.query;
 
-      let query = {};
+        let query = {};
+        let sortOption = {};
+        // search filter
+        if (search) {
+          query.$or = [
+            { scholarshipName: { $regex: search, $options: "i" } },
+            { universityName: { $regex: search, $options: "i" } },
+            { universityCountry: { $regex: search, $options: "i" } },
+          ];
+        }
+        // category filter
+        if (category) {
+          query.scholarshipCategory = category;
+        }
+        // sorting logic
+        if (sortBy) {
+          const sortOrder = order === "asc" ? 1 : -1;
+          if (sortBy === "fees") {
+            sortOption.applicationFees = sortOrder;
+          }
+          if (sortBy === "date") {
+            sortOption.postedDate = sortOrder;
+          }
+        }
 
-      // search filter (name, university)
-      if (search) {
-        query.$or = [
-          { scholarshipName: { $regex: search, $options: "i" } },
-          { universityName: { $regex: search, $options: "i" } },
-          { universityCountry: { $regex: search, $options: "i" } },
-        ];
+        const result = await scholarshipsCollection
+          .find(query)
+          .sort(sortOption)
+          .toArray();
+
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
       }
-
-      // category filter
-      if (category) {
-        query.scholarshipCategory = category;
-      }
-
-      const result = await scholarshipsCollection.find(query).toArray();
-      res.send(result);
     });
+
     // GET home scholarships
     app.get("/home/scholarships", async (req, res) => {
       const result = await scholarshipsCollection.find({}).limit(6).toArray();
