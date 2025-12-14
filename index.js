@@ -265,15 +265,21 @@ async function run() {
       }
     });
 
-    // GET all scholarships (with search, filter, sort)
-
+    // GET all scholarships (search + filter + sort + pagination)
     app.get("/scholarships", async (req, res) => {
       try {
-        const { search, category, sortBy, order } = req.query;
+        const {
+          search,
+          category,
+          sortBy,
+          order,
+          page = 1,
+          limit = 9,
+        } = req.query;
 
         let query = {};
         let sortOption = {};
-        // search filter
+
         if (search) {
           query.$or = [
             { scholarshipName: { $regex: search, $options: "i" } },
@@ -281,27 +287,34 @@ async function run() {
             { universityCountry: { $regex: search, $options: "i" } },
           ];
         }
-        // category filter
+
         if (category) {
           query.scholarshipCategory = category;
         }
-        // sorting logic
+
         if (sortBy) {
           const sortOrder = order === "asc" ? 1 : -1;
-          if (sortBy === "fees") {
-            sortOption.applicationFees = sortOrder;
-          }
-          if (sortBy === "date") {
-            sortOption.postedDate = sortOrder;
-          }
+          if (sortBy === "fees") sortOption.applicationFees = sortOrder;
+          if (sortBy === "date") sortOption.postedDate = sortOrder;
         }
 
-        const result = await scholarshipsCollection
+        const skip = (Number(page) - 1) * Number(limit);
+
+        const total = await scholarshipsCollection.countDocuments(query);
+
+        const scholarships = await scholarshipsCollection
           .find(query)
           .sort(sortOption)
+          .skip(skip)
+          .limit(Number(limit))
           .toArray();
 
-        res.send(result);
+        res.send({
+          data: scholarships,
+          total,
+          page: Number(page),
+          totalPages: Math.ceil(total / limit),
+        });
       } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Server error" });
