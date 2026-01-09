@@ -13,7 +13,10 @@ const app = express();
 // middleware
 app.use(
   cors({
-    origin: ["https://scholarstream-b12a11-nahiyan.netlify.app"],
+    origin: [
+      "https://scholarstream-b12a11-nahiyan.netlify.app",
+      "http://localhost:5173",
+    ],
     credentials: true,
   })
 );
@@ -321,9 +324,38 @@ async function run() {
       }
     });
 
+    // GET Recommended Scholarships
+    app.get("/rec/scholarships", async (req, res) => {
+      try {
+        const { category, currentId } = req.query;
+
+        if (!category) {
+          return res
+            .status(400)
+            .send({ message: "Category is required for recommendations" });
+        }
+
+        let query = { subjectCategory: category };
+
+        if (currentId) {
+          query._id = { $ne: new ObjectId(currentId) };
+        }
+
+        const result = await scholarshipsCollection
+          .find(query)
+          .limit(4)
+          .toArray();
+
+        res.send(result);
+      } catch (error) {
+        console.error("Rec API Error:", error);
+        res.status(500).send({ message: "Failed to fetch recommendations" });
+      }
+    });
+
     // GET home scholarships
     app.get("/home/scholarships", async (req, res) => {
-      const result = await scholarshipsCollection.find({}).limit(6).toArray();
+      const result = await scholarshipsCollection.find({}).limit(8).toArray();
       res.send(result);
     });
     // GET admin scholarships
